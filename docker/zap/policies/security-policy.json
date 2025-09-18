@@ -1,0 +1,19 @@
+{
+  "name": "Enhanced Security Policy",
+  "threshold": "MEDIUM",
+  "rules": {
+    "10020": "HIGH",     // X-Frame-Options
+    "10021": "HIGH",     // X-Content-Type-Options
+    "10023": "HIGH",     // Information Disclosure
+    "10038": "HIGH",     // Content Security Policy
+    "10063": "HIGH",     // Feature Policy
+    "10096": "HIGH",     // Timestamp Disclosure
+    "10105": "HIGH",     // Weak Authentication
+    "40025": "HIGH"      // Proxy Disclosure
+  },
+  "scan-parameters": {
+    "enableTags": "owasp-2021-top10",
+    "maxDuration": "60",
+    "maxDepth": "10"
+  }
+}

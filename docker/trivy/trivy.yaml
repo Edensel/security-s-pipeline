@@ -1,0 +1,19 @@
+scan:
+  security-checks:
+    - vuln
+    - config
+    - secret
+    - license
+  skip-dirs:
+    - node_modules
+    - .git
+  severity:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
+  vuln-type:
+    - os
+    - library
+  timeout: 10m
+  list-all-pkgs: true
+  ignorefile: .trivyignore

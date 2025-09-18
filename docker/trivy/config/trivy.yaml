@@ -1,0 +1,12 @@
+scan:
+  security-checks:
+    - vuln
+    - config
+    - secret
+  skip-dirs:
+    - node_modules
+    - .git
+  severity:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
