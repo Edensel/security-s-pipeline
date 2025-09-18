@@ -1,6 +1,6 @@
 # Security Scanning Pipeline
 
-![Security Pipeline](assets/Security Pipeline-trity.png)
+![Security Pipeline](assets/securitypipeline-trity.png)
 
 ## Overview
 An enterprise-grade security scanning pipeline that integrates SAST, DAST, and dependency scanning tools into your CI/CD workflow. Built with modern security practices and automation in mind.
@@ -13,7 +13,7 @@ An enterprise-grade security scanning pipeline that integrates SAST, DAST, and d
 - **CI/CD Integration**: Jenkins pipeline and GitHub Actions support
 - **Configurable Gates**: Flexible security thresholds and policies
 
-## 🛠️ Prerequisites
+## Prerequisites
 - Docker Engine 20.10+
 - Jenkins 2.375+ or GitHub Actions
 - Python 3.8+
@@ -104,7 +104,7 @@ Security scans generate comprehensive reports in multiple formats:
 - **SARIF**: IDE integration
 - **Custom**: Configurable templates
 
-## 🔧 Tool Configuration
+## Tool Configuration
 
 ### SonarQube
 ```yaml
