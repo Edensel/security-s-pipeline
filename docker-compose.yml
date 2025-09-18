@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  sonarqube:
+    image: security-sonarqube:latest
+    container_name: security-sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+      - SONAR_SEARCH_JAVAOPTS=-Xmx512m -Xms512m
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
+    networks:
+      - security-net
+
+  zap:
+    image: security-zap:latest
+    container_name: security-zap
+    ports:
+      - "8080:8080"
+      - "8090:8090"
+    environment:
+      - ZAP_API_KEY=changeme123
+      - ZAP_WEBSWING_OPTS="-host 0.0.0.0 -port 8080 -contextPath /zap"
+    command: zap.sh -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=false
+    networks:
+      - security-net
+    volumes:
+      - zap_data:/zap/wrk
+
+  trivy:
+    image: security-trivy:latest
+    container_name: security-trivy
+    ports:
+      - "4954:4954"
+    environment:
+      - TRIVY_LISTEN=0.0.0.0:4954
+      - TRIVY_CACHE_DIR=/root/.cache
+      - TRIVY_NO_PROGRESS=true
+    command: server --listen 0.0.0.0:4954
+    volumes:
+      - trivy_cache:/root/.cache
+    networks:
+      - security-net
+
+networks:
+  security-net:
+    driver: bridge
+
+volumes:
+  sonarqube_data:
+  sonarqube_logs:
+  sonarqube_extensions:
+  zap_data:
+  trivy_cache:
