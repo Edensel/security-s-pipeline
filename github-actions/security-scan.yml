@@ -1,0 +1,9 @@
+name: Security Scan
+on: [push]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run SAST
+        run: python scripts/sast-scan.py --source-path . --output reports/sast-report.json
