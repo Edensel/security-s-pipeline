@@ -1,6 +1,6 @@
 # Security Scanning Pipeline
 
-![Security Pipeline](assets/pipeline-banner.png)
+![Security Pipeline](assets/Security Pipeline-trity.png)
 
 ## Overview
 An enterprise-grade security scanning pipeline that integrates SAST, DAST, and dependency scanning tools into your CI/CD workflow. Built with modern security practices and automation in mind.
@@ -137,3 +137,6 @@ scan:
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## License
+MIT License - see LICENSE file for details.
