@@ -1,0 +1,4 @@
+securityGates:
+  critical: 0
+  high: 5
+  medium: 20

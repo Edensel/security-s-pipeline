@@ -1,0 +1,157 @@
+pipeline {
+    agent {
+        docker {
+            image 'secure-builder:latest'
+            args '--security-opt=no-new-privileges'
+        }
+    }
+
+    environment {
+        APP_NAME = 'security-app'
+        DOCKER_REGISTRY = credentials('docker-registry')
+        SONAR_TOKEN = credentials('sonar-token')
+        SNYK_TOKEN = credentials('snyk-token')
+        ZAP_API_KEY = credentials('zap-api-key')
+        SLACK_WEBHOOK = credentials('slack-webhook')
+        // Add security scanning thresholds
+        CRITICAL_VULN_THRESHOLD = '0'
+        HIGH_VULN_THRESHOLD = '2'
+        MEDIUM_VULN_THRESHOLD = '5'
+    }
+
+    options {
+        // Add security timeout
+        timeout(time: 1, unit: 'HOURS')
+        disableConcurrentBuilds()
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                    docker build -t ${APP_NAME}:${BUILD_NUMBER} .
+                    docker tag ${APP_NAME}:${BUILD_NUMBER} ${APP_NAME}:latest
+                '''
+            }
+        }
+
+        stage('SAST Scan') {
+            steps {
+                sh 'python scripts/sast-scan.py --source-path . --output reports/sast-report.json'
+            }
+        }
+
+        stage('Dependency Scan') {
+            steps {
+                sh '''
+                    snyk auth ${SNYK_TOKEN}
+                    snyk test --json > reports/dependency-report.json
+                    trivy fs --exit-code 0 --no-progress --format json --output reports/trivy-fs-report.json .
+                '''
+            }
+        }
+
+        stage('DAST Scan') {
+            when {
+                branch 'main'
+            }
+            steps {
+                sh 'python scripts/dast-scan.py --target http://app:8080 --output reports/dast-report.json'
+            }
+        }
+
+        stage('Generate Report') {
+            steps {
+                sh 'python scripts/generate-report.py --input reports/*.json --output reports/security-report.html'
+            }
+        }
+
+        stage('Security Gate') {
+            steps {
+                script {
+                    def report = readJSON file: 'reports/dependency-report.json'
+                    def critical = report.vulnerabilities.findAll { it.severity == 'critical' }.size()
+                    def high = report.vulnerabilities.findAll { it.severity == 'high' }.size()
+                    def medium = report.vulnerabilities.findAll { it.severity == 'medium' }.size()
+
+                    def config = readYaml file: 'config/pipeline-config.yaml'
+                    def criticalLimit = config.securityGates.critical
+                    def highLimit = config.securityGates.high
+                    def mediumLimit = config.securityGates.medium
+
+                    if (critical > criticalLimit) {
+                        error "Security gate failed: ${critical} critical vulnerabilities found (limit: ${criticalLimit})"
+                    }
+
+                    if (high > highLimit) {
+                        error "Security gate failed: ${high} high vulnerabilities found (limit: ${highLimit})"
+                    }
+
+                    if (medium > mediumLimit) {
+                        currentBuild.result = 'UNSTABLE'
+                        echo "Warning: ${medium} medium vulnerabilities found (limit: ${mediumLimit})"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Security Registry') {
+            when {
+                branch 'main'
+            }
+            steps {
+                sh '''
+                    docker tag ${APP_NAME}:${BUILD_NUMBER} ${DOCKER_REGISTRY}/${APP_NAME}:${BUILD_NUMBER}
+                    docker tag ${APP_NAME}:${BUILD_NUMBER} ${DOCKER_REGISTRY}/${APP_NAME}:latest
+                    docker push ${DOCKER_REGISTRY}/${APP_NAME}:${BUILD_NUMBER}
+                    docker push ${DOCKER_REGISTRY}/${APP_NAME}:latest
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            // Cleanup
+            sh '''
+                docker rmi ${APP_NAME}:${BUILD_NUMBER} || true
+                docker rmi ${APP_NAME}:latest || true
+                docker system prune -f
+            '''
+        }
+
+        success {
+            script {
+                if (env.BRANCH_NAME == 'main') {
+                    slackSend(
+                        channel: '#security',
+                        color: 'good',
+                        message: "✅ Security scan passed for ${APP_NAME} build #${BUILD_NUMBER}"
+                    )
+                }
+            }
+        }
+
+        failure {
+            slackSend(
+                channel: '#security',
+                color: 'danger',
+                message: "❌ Security scan failed for ${APP_NAME} build #${BUILD_NUMBER}. Check: ${BUILD_URL}"
+            )
+        }
+
+        unstable {
+            slackSend(
+                channel: '#security',
+                color: 'warning',
+                message: "⚠️ Security scan unstable for ${APP_NAME} build #${BUILD_NUMBER}. Review: ${BUILD_URL}"
+            )
+        }
+    }
+}
