@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header">
+    <h1>Security Scan Detailed Report</h1>
+    <p>Generated: {{ timestamp }}</p>
+</div>
+
+<div class="section">
+    <h2>SAST Findings</h2>
+    <table>
+        <tr>
+            <th>Severity</th>
+            <th>Issue</th>
+            <th>Location</th>
+            <th>Description</th>
+        </tr>
+        {% for issue in sast_issues %}
+        <tr>
+            <td class="severity-{{ issue.severity|lower }}">{{ issue.severity }}</td>
+            <td>{{ issue.type }}</td>
+            <td>{{ issue.location }}</td>
+            <td>{{ issue.description }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<div class="section">
+    <h2>Dependency Vulnerabilities</h2>
+    <table>
+        <tr>
+            <th>Package</th>
+            <th>Current Version</th>
+            <th>Vulnerability</th>
+            <th>Severity</th>
+            <th>Fix Version</th>
+        </tr>
+        {% for vuln in dependency_vulns %}
+        <tr>
+            <td>{{ vuln.package }}</td>
+            <td>{{ vuln.version }}</td>
+            <td>{{ vuln.title }}</td>
+            <td class="severity-{{ vuln.severity|lower }}">{{ vuln.severity }}</td>
+            <td>{{ vuln.fix_version }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<div class="section">
+    <h2>DAST Findings</h2>
+    <table>
+        <tr>
+            <th>Risk</th>
+            <th>URL</th>
+            <th>Alert</th>
+            <th>Solution</th>
+        </tr>
+        {% for alert in dast_alerts %}
+        <tr>
+            <td class="severity-{{ alert.risk|lower }}">{{ alert.risk }}</td>
+            <td>{{ alert.url }}</td>
+            <td>{{ alert.alert }}</td>
+            <td>{{ alert.solution }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

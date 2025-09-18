@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- Vulnerability Overview -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Vulnerability Overview</h2>
+        <canvas id="vulnerabilityChart"></canvas>
+    </div>
+
+    <!-- Security Score -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Security Score</h2>
+        <div class="flex items-center justify-center">
+            <div class="text-6xl font-bold {% if security_score >= 90 %}text-green-500{% elif security_score >= 70 %}text-yellow-500{% else %}text-red-500{% endif %}">
+                {{ security_score }}%
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-lg shadow p-6 mb-8">
+    <h2 class="text-lg font-semibold mb-4">Scan Results</h2>
+    <div class="overflow-x-auto">
+        <table class="min-w-full table-auto">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="px-4 py-2">Scan Type</th>
+                    <th class="px-4 py-2">Critical</th>
+                    <th class="px-4 py-2">High</th>
+                    <th class="px-4 py-2">Medium</th>
+                    <th class="px-4 py-2">Low</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dynamic content -->
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
